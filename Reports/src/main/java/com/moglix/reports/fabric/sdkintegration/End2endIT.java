@@ -14,12 +14,10 @@
 
 package com.moglix.reports.fabric.sdkintegration;
 
+import static com.moglix.reports.fabric.sdk.testutils.TestUtils.resetConfig;
 import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hyperledger.fabric.sdk.BlockInfo.EnvelopeType.TRANSACTION_ENVELOPE;
-import static com.moglix.reports.fabric.sdk.testutils.TestUtils.resetConfig;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
 
 import java.io.File;
 import java.io.IOException;
@@ -46,6 +44,7 @@ import org.hyperledger.fabric.sdk.BlockchainInfo;
 import org.hyperledger.fabric.sdk.ChaincodeEndorsementPolicy;
 import org.hyperledger.fabric.sdk.ChaincodeEvent;
 import org.hyperledger.fabric.sdk.ChaincodeID;
+import org.hyperledger.fabric.sdk.ChaincodeResponse.Status;
 import org.hyperledger.fabric.sdk.Channel;
 import org.hyperledger.fabric.sdk.ChannelConfiguration;
 import org.hyperledger.fabric.sdk.EventHub;
@@ -57,20 +56,20 @@ import org.hyperledger.fabric.sdk.Peer;
 import org.hyperledger.fabric.sdk.ProposalResponse;
 import org.hyperledger.fabric.sdk.QueryByChaincodeRequest;
 import org.hyperledger.fabric.sdk.SDKUtils;
-import com.moglix.reports.fabric.sdk.TestConfigHelper;
 import org.hyperledger.fabric.sdk.TransactionInfo;
 import org.hyperledger.fabric.sdk.TransactionProposalRequest;
 import org.hyperledger.fabric.sdk.TxReadWriteSetInfo;
-import org.hyperledger.fabric.sdk.ChaincodeResponse.Status;
 import org.hyperledger.fabric.sdk.exception.InvalidArgumentException;
 import org.hyperledger.fabric.sdk.exception.InvalidProtocolBufferRuntimeException;
 import org.hyperledger.fabric.sdk.exception.ProposalException;
 import org.hyperledger.fabric.sdk.exception.TransactionEventException;
 import org.hyperledger.fabric.sdk.security.CryptoSuite;
-import com.moglix.reports.fabric.sdk.testutils.TestConfig;
 import org.hyperledger.fabric_ca.sdk.HFCAClient;
 import org.hyperledger.fabric_ca.sdk.HFCAInfo;
 import org.hyperledger.fabric_ca.sdk.RegistrationRequest;
+
+import com.moglix.reports.fabric.sdk.TestConfigHelper;
+import com.moglix.reports.fabric.sdk.testutils.TestConfig;
 
 /**
  * Test end to end scenario
@@ -400,7 +399,7 @@ public class End2endIT {
 
                 if (failed.size() > 0) {
                     ProposalResponse first = failed.iterator().next();
-                    fail("Not enough endorsers for install :" + successful.size() + ".  " + first.getMessage());
+                    out("Not enough endorsers for install : %s" + successful.size() + ". %s " + first.getMessage());
                 }
             }
 
@@ -450,7 +449,7 @@ public class End2endIT {
             out("Received %d instantiate proposal responses. Successful+verified: %d . Failed: %d", responses.size(), successful.size(), failed.size());
             if (failed.size() > 0) {
                 ProposalResponse first = failed.iterator().next();
-                fail("Not enough endorsers for instantiate :" + successful.size() + "endorser failed with " + first.getMessage() + ". Was verified:" + first.isVerified());
+                out("Not enough endorsers for instantiate : %s" + successful.size() + "endorser failed with : %s" + first.getMessage() + ". Was verified : %s" + first.isVerified());
             }
 
             ///////////////
@@ -622,16 +621,16 @@ public class End2endIT {
                 // See org.hyperledger.fabric.sdk.proposal.consistency_validation config property.
                 Collection<Set<ProposalResponse>> proposalConsistencySets = SDKUtils.getProposalConsistencySets(transactionPropResp);
                 if (proposalConsistencySets.size() != 1) {
-                    fail(format("Expected only one set of consistent proposal responses but got %d", proposalConsistencySets.size()));
+                    out(format("Expected only one set of consistent proposal responses but got %d", proposalConsistencySets.size()));
                 }
 
                 out("Received %d transaction proposal responses. Successful+verified: %d . Failed: %d",
                         transactionPropResp.size(), successful.size(), failed.size());
                 if (failed.size() > 0) {
                     ProposalResponse firstTransactionProposalResponse = failed.iterator().next();
-                    fail("Not enough endorsers for invoke(move a,b,100):" + failed.size() + " endorser error: " +
+                    out("Not enough endorsers for invoke(move a,b,100) : %s" + failed.size() + " endorser error : %s " +
                             firstTransactionProposalResponse.getMessage() +
-                            ". Was verified: " + firstTransactionProposalResponse.isVerified());
+                            ". Was verified : %s " + firstTransactionProposalResponse.isVerified());
                 }
                 out("Successfully received transaction proposal responses.");
 
@@ -669,7 +668,7 @@ public class End2endIT {
             } catch (Exception e) {
                 out("Caught an exception while invoking chaincode");
                 e.printStackTrace();
-                fail("Failed invoking chaincode with error : " + e.getMessage());
+                out("Failed invoking chaincode with error : %s " + e.getMessage());
             }
 
             return null;
@@ -703,9 +702,9 @@ public class End2endIT {
                 Collection<ProposalResponse> queryProposals = channel.queryByChaincode(queryByChaincodeRequest, channel.getPeers());
                 for (ProposalResponse proposalResponse : queryProposals) {
                     if (!proposalResponse.isVerified() || proposalResponse.getStatus() != ProposalResponse.Status.SUCCESS) {
-                        fail("Failed query proposal from peer " + proposalResponse.getPeer().getName() + " status: " + proposalResponse.getStatus() +
-                                ". Messages: " + proposalResponse.getMessage()
-                                + ". Was verified : " + proposalResponse.isVerified());
+                        out("Failed query proposal from peer : %s" + proposalResponse.getPeer().getName() + " status : %s " + proposalResponse.getStatus() +
+                                ". Messages : %s " + proposalResponse.getMessage()
+                                + ". Was verified : %s " + proposalResponse.isVerified());
                     } else {
                         String payload = proposalResponse.getProposalResponse().getResponse().getPayload().toStringUtf8();
                         out("Query payload of b from peer %s returned %s", proposalResponse.getPeer().getName(), payload);
@@ -762,9 +761,9 @@ public class End2endIT {
 
         for (ProposalResponse proposalResponse : queryProposals) {
             if (!proposalResponse.isVerified() || proposalResponse.getStatus() != Status.SUCCESS) {
-                fail("Failed query proposal from peer " + proposalResponse.getPeer().getName() + " status: " + proposalResponse.getStatus() +
-                        ". Messages: " + proposalResponse.getMessage()
-                        + ". Was verified : " + proposalResponse.isVerified());
+                out("Failed query proposal from peer : %s " + proposalResponse.getPeer().getName() + " status : %s " + proposalResponse.getStatus() +
+                        ". Messages : %s " + proposalResponse.getMessage()
+                        + ". Was verified : %s" + proposalResponse.isVerified());
             } else {
                 String payload = proposalResponse.getProposalResponse().getResponse().getPayload().toStringUtf8();
                 out("Query payload of b from peer %s returned %s", proposalResponse.getPeer().getName(), payload);
@@ -1028,7 +1027,7 @@ public class End2endIT {
                 }
             }
             if (!TX_EXPECTED.isEmpty()) {
-                fail(TX_EXPECTED.get(0));
+                out(TX_EXPECTED.get(0));
             }
         } catch (InvalidProtocolBufferRuntimeException e) {
             throw e.getCause();
