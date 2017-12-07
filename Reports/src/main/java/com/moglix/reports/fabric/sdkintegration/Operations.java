@@ -238,19 +238,15 @@ public class Operations {
             //assertNull(client.getChannel(FOO_CHANNEL_NAME));
             out("\n");
 
-            sampleOrg = testConfig.getIntegrationTestsSampleOrg("peerOrg2");
-            
-            out("YYYYYYYYYY sampleOrg name : %s , sampleOrg CANAME : %s, ", sampleOrg.name, sampleOrg.getCAName() );
-            
-            Set<String> peernames2 = sampleOrg.getPeerNames();
-            Iterator<String> itr2 = peernames2.iterator();
-			while(itr2.hasNext()){
-				out("peer name : %s ", itr2.next());
-			}
-            
-
-			
-			
+//            sampleOrg = testConfig.getIntegrationTestsSampleOrg("peerOrg2");
+//            
+//            out("YYYYYYYYYY sampleOrg name : %s , sampleOrg CANAME : %s, ", sampleOrg.name, sampleOrg.getCAName() );
+//            
+//            Set<String> peernames2 = sampleOrg.getPeerNames();
+//            Iterator<String> itr2 = peernames2.iterator();
+//			while(itr2.hasNext()){
+//				out("peer name : %s ", itr2.next());
+//			}
 			
 //			Channel barChannel = constructChannel(BAR_CHANNEL_NAME, client, sampleOrg);
 //            /**
@@ -341,14 +337,10 @@ public class Operations {
         
             queryChaincodeForExpectedValue(client, channel, "" ,chaincodeID);
             	
-        //    Thread.sleep(10000);
-            	out("88888888888888888888888888");
+            out("88888888888888888888888888");
             	
-            	//move(client, channel, installChaincode, sampleOrg, delta, orderers, successful, failed, chaincodeID);
-            	//queryChaincodeForExpectedValue(client, channel, "" ,chaincodeID);
             	
-            	out("77777777777777777777777777");
-            	// Channel queries
+            // Channel queries
 
             // We can only send channel queries to peers that are in the same org as the SDK user context
             // Get the peers from the current org being used and pick one randomly to send the queries to.
