@@ -83,7 +83,7 @@ public class End2endIT {
 
     private static final String CHAIN_CODE_NAME = "example_cc_go";
     private static final String CHAIN_CODE_PATH = "github.com/example_cc";
-    private static final String CHAIN_CODE_VERSION = "1";
+    private static final String CHAIN_CODE_VERSION = "6";
 
     private static final String FOO_CHANNEL_NAME = "foo";
     private static final String BAR_CHANNEL_NAME = "bar";
@@ -259,10 +259,6 @@ public class End2endIT {
 //			while(itr2.hasNext()){
 //				out("peer name : %s ", itr2.next());
 //			}
-//            
-//
-//			
-//			
 //			
 //			Channel barChannel = constructChannel(BAR_CHANNEL_NAME, client, sampleOrg);
 //            /**
@@ -414,7 +410,7 @@ public class End2endIT {
             instantiateProposalRequest.setProposalWaitTime(testConfig.getProposalWaitTime());
             instantiateProposalRequest.setChaincodeID(chaincodeID);
             instantiateProposalRequest.setFcn("init");
-            instantiateProposalRequest.setArgs(new String[] {"a", "600", "b", "" + (300 + delta)});
+            instantiateProposalRequest.setArgs(new String[] {"a", "name:manish", "b", "name:manish"});
             Map<String, byte[]> tm = new HashMap<>();
             tm.put("HyperLedgerFabric", "InstantiateProposalRequest:JavaSDK".getBytes(UTF_8));
             tm.put("method", "InstantiateProposalRequest".getBytes(UTF_8));
@@ -449,7 +445,7 @@ public class End2endIT {
             out("Received %d instantiate proposal responses. Successful+verified: %d . Failed: %d", responses.size(), successful.size(), failed.size());
             if (failed.size() > 0) {
                 ProposalResponse first = failed.iterator().next();
-                out("Not enough endorsers for instantiate : %s" + successful.size() + "endorser failed with : %s" + first.getMessage() + ". Was verified : %s" + first.isVerified());
+                out("Not enough endorsers for instantiate : %d" + successful.size() + "endorser failed with : %s" + first.getMessage() + ". Was verified : %s" + first.isVerified());
             }
 
             ///////////////
@@ -589,7 +585,7 @@ public class End2endIT {
                 transactionProposalRequest.setChaincodeID(chaincodeID);
                 transactionProposalRequest.setFcn("invoke");
                 transactionProposalRequest.setProposalWaitTime(testConfig.getProposalWaitTime());
-                transactionProposalRequest.setArgs(new String[] {"move", "a", "b", "100"});
+                transactionProposalRequest.setArgs(new String[] {"move", "a", "b", "name:abhishek"});
 
                 Map<String, byte[]> tm2 = new HashMap<>();
                 tm2.put("HyperLedgerFabric", "TransactionProposalRequest:JavaSDK".getBytes(UTF_8)); //Just some extra junk in transient map

@@ -9,6 +9,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -65,7 +66,7 @@ public class Operations {
 
     private static final String CHAIN_CODE_NAME = "example_cc_go";
     private static final String CHAIN_CODE_PATH = "github.com/example_cc";
-    private static final String CHAIN_CODE_VERSION = "1";
+    private static final String CHAIN_CODE_VERSION = "6";
 
     private static final String FOO_CHANNEL_NAME = "foo";
     private static final String BAR_CHANNEL_NAME = "bar";
@@ -90,9 +91,21 @@ public class Operations {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
-    	e.setup();
+    	e.setup(2, "testing");
     }
     
+    public List<String> tranaction(int delta, String data) {
+    	
+    	try {
+			checkConfig();
+		} catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException
+				| MalformedURLException | org.hyperledger.fabric_ca.sdk.exception.InvalidArgumentException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+    	return setup(delta, data);
+    	
+    }
     
     
     public void checkConfig() throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException, MalformedURLException, org.hyperledger.fabric_ca.sdk.exception.InvalidArgumentException {
@@ -108,16 +121,16 @@ public class Operations {
         for (SampleOrg sampleOrg : testSampleOrgs) {
             String caName = sampleOrg.getCAName(); //Try one of each name and no name.
             if (caName != null && !caName.isEmpty()) {
-            	out("mani");
                 sampleOrg.setCAClient(HFCAClient.createNewInstance(caName, sampleOrg.getCALocation(), sampleOrg.getCAProperties()));
             } else {
-            	out("roy");
                 sampleOrg.setCAClient(HFCAClient.createNewInstance(sampleOrg.getCALocation(), sampleOrg.getCAProperties()));
             }
         }
     }
 
-    public void setup() {
+    public List<String> setup(int delta, String data) {
+    	
+    	List<String> res = new ArrayList<>();
 
         try {
 
@@ -221,7 +234,7 @@ public class Operations {
             
 			Channel fooChannel = reconstructChannel(FOO_CHANNEL_NAME, client, sampleOrg, sampleStore);
             
-            runChannel(client, fooChannel, true, sampleOrg, 0);
+            res = runChannel(client, fooChannel, true, sampleOrg, delta, data);
             
             fooChannel.shutdown(true); // Force foo channel to shutdown clean up resources.
             //assertNull(client.getChannel(FOO_CHANNEL_NAME));
@@ -246,7 +259,6 @@ public class Operations {
 //            //let bar channel just shutdown so we have both scenarios.
 
            // out("\nTraverse the blocks for chain %s ", barChannel.getName());
-           // blockWalker(client, barChannel);
             out("That's all folks!");
 
         } catch (Exception e) {
@@ -254,11 +266,13 @@ public class Operations {
 
             //fail(e.getMessage());
         }
+        
+        return res;
 
     }
 
     //CHECKSTYLE.OFF: Method length is 320 lines (max allowed is 150).
-    void runChannel(HFClient client, Channel channel, boolean installChaincode, SampleOrg sampleOrg, int delta) {
+    List<String> runChannel(HFClient client, Channel channel, boolean installChaincode, SampleOrg sampleOrg, int delta, String data) {
 
         class ChaincodeEventCapture { //A test class to capture chaincode events
             final String handle;
@@ -315,63 +329,17 @@ public class Operations {
                     .setPath(CHAIN_CODE_PATH).build();
             client.setUserContext(sampleOrg.getPeerAdmin());
 
-            ///////////////
-            /// Send instantiate transaction to orderer
-            out("Sending instantiateTransaction to orderer with a and b set to 100 and %s respectively", "" + (200 + delta));
 
-
-            out("99999999999999999999999999");
-            	
-            move(client, channel, installChaincode, sampleOrg, delta, orderers, successful, failed, chaincodeID);
-        
-            queryChaincodeForExpectedValue(client, channel, "" ,chaincodeID);
-            	
-            out("88888888888888888888888888");
-            	
-            	
-            // Channel queries
-
-            // We can only send channel queries to peers that are in the same org as the SDK user context
-            // Get the peers from the current org being used and pick one randomly to send the queries to.
-            Set<Peer> peerSet = sampleOrg.getPeers();
-            //  Peer queryPeer = peerSet.iterator().next();
-            //   out("Using peer %s for channel queries", queryPeer.getName());
-
-            BlockchainInfo channelInfo = channel.queryBlockchainInfo();
-            out("Channel info for : " + channelName);
-            out("Channel height: " + channelInfo.getHeight());
-            String chainCurrentHash = Hex.encodeHexString(channelInfo.getCurrentBlockHash());
-            String chainPreviousHash = Hex.encodeHexString(channelInfo.getPreviousBlockHash());
-            out("Chain current block hash: " + chainCurrentHash);
-            out("Chainl previous block hash: " + chainPreviousHash);
-
-            // Query by block number. Should return latest block, i.e. block number 2
-            BlockInfo returnedBlock = channel.queryBlockByNumber(channelInfo.getHeight() - 1);
-            String previousHash = Hex.encodeHexString(returnedBlock.getPreviousHash());
-            out("queryBlockByNumber returned correct block with blockNumber " + returnedBlock.getBlockNumber()
-                    + " \n previous_hash " + previousHash);
-          
-            
-            out("channelInfo height : %s , returnedBlock : %s, ",channelInfo.getHeight() - 1, returnedBlock.getBlockNumber());
-            out("chainPreviousHash : %s , previousHash %s : ", chainPreviousHash, previousHash);
-
-            // Query by block hash. Using latest block's previous hash so should return block number 1
-            byte[] hashQuery = returnedBlock.getPreviousHash();
-            returnedBlock = channel.queryBlockByHash(hashQuery);
-            out("queryBlockByHash returned block with blockNumber " + returnedBlock.getBlockNumber());
-            out("channelInfo's Height : %s, returnedBlock block number : %s", channelInfo.getHeight() - 2, returnedBlock.getBlockNumber());
-            
-            out("channeldata : %s ", returnedBlock.getBlock().getData());
-
-            // Query block by TxID. Since it's the last TxID, should be block 2
-            returnedBlock = channel.queryBlockByTransactionID(testTxID);
-            out("queryBlockByTxID returned block with blockNumber " + returnedBlock.getBlockNumber());
-            out("channelInfo's Height : %s, returnedBlock block number : %s", channelInfo.getHeight() - 1, returnedBlock.getBlockNumber());
-
-            // query transaction by ID
-            TransactionInfo txInfo = channel.queryTransactionByID(testTxID);
-            out("QueryTransactionByID returned TransactionInfo: txID " + txInfo.getTransactionID()
-                    + "\n     validation code " + txInfo.getValidationCode().getNumber());
+            switch(delta) {	
+	            case 0 :
+	            	return move(client, channel, installChaincode, sampleOrg, delta, orderers, successful, failed, chaincodeID, data);
+	            case 1 : 
+		            return queryChaincodeForExpectedValue(client, channel, "" ,chaincodeID);
+	            case 2 :
+		            return blockWalker(client, channel);
+	            default :
+	            	out("Not a valid option, Go have Fun!");
+            }
 
             if (chaincodeEventListenerHandle != null) {
 
@@ -389,27 +357,6 @@ public class Operations {
 
                 }
                 
-                out("numberEventHubs : %s, chaincodeEvents.size() : %s", numberEventHubs, chaincodeEvents.size());
-
-                for (ChaincodeEventCapture chaincodeEventCapture : chaincodeEvents) {
-                    out("chaincodeEventListenerHandle : %s, chaincodeEventCapture.handle : %s ", chaincodeEventListenerHandle, chaincodeEventCapture.handle);
-                    
-                    out("testTxID : %s, chaincodeEventCapture.chaincodeEvent.getTxId() : %s ", testTxID, chaincodeEventCapture.chaincodeEvent.getTxId());
-                    
-                    out("EXPECTED_EVENT_NAME : %s , chaincodeEventCapture.chaincodeEvent.getEventName() : %s ", EXPECTED_EVENT_NAME, chaincodeEventCapture.chaincodeEvent.getEventName());
-                    
-                    System.out.println(Arrays.equals(EXPECTED_EVENT_DATA, chaincodeEventCapture.chaincodeEvent.getPayload()));
-                    
-                    out("CHAIN_CODE_NAME : %s , chaincodeEventCapture.chaincodeEvent.getChaincodeId() : %s", CHAIN_CODE_NAME, chaincodeEventCapture.chaincodeEvent.getChaincodeId());
-
-                    BlockEvent blockEvent = chaincodeEventCapture.blockEvent;
-                    
-                    out("channelName : %s , blockEvent.getChannelId() : %s " , channelName, blockEvent.getChannelId());
-                    
-                    System.out.println(channel.getEventHubs().contains(blockEvent.getEventHub()));
-
-                }
-
             } else {
                 out("chaincodeEvents.isEmpty() : %s", chaincodeEvents.isEmpty());
             }
@@ -421,23 +368,21 @@ public class Operations {
             e.printStackTrace();
             //fail("Test failed with error : " + e.getMessage());
         }
+		return null;
     }
     
     
     
 
     
-    private void move(HFClient client, Channel channel, boolean installChaincode, SampleOrg sampleOrg, int delta ,
+    private List<String> move(HFClient client, Channel channel, boolean installChaincode, SampleOrg sampleOrg, int delta ,
     		Collection<Orderer> orderers, Collection<ProposalResponse> successful, Collection<ProposalResponse> failed, 
-    		final ChaincodeID chaincodeID) throws Exception {
-
-    	out("XYXYXYXYXYXYXYXYXYXYXY");
+    		final ChaincodeID chaincodeID, String data) throws Exception {
     	
-
+    	List<String> transactionId = new ArrayList<>();
+    	
+    		out("Inside Trnsaction Module");
             waitOnFabric(0);
-
-         //   assertTrue(transactionEvent.isValid()); // must be valid to be here.
-            //out("--- Finishedinstantiate transaction with transaction id %s, chainCodeId : %s", transactionEvent.getTransactionID(), chaincodeID);
 
             try {
                 successful.clear();
@@ -445,13 +390,11 @@ public class Operations {
 
                 client.setUserContext(sampleOrg.getPeerAdmin());
 
-                ///////////////
-                /// Send transaction proposal to all peers
                 TransactionProposalRequest transactionProposalRequest = client.newTransactionProposalRequest();
                 transactionProposalRequest.setChaincodeID(chaincodeID);
                 transactionProposalRequest.setFcn("invoke");
                 transactionProposalRequest.setProposalWaitTime(testConfig.getProposalWaitTime());
-                transactionProposalRequest.setArgs(new String[] {"move", "b", "a", "100"});
+                transactionProposalRequest.setArgs(new String[] {"move", "b", "a", data});
 
                 Map<String, byte[]> tm2 = new HashMap<>();
                 tm2.put("HyperLedgerFabric", "TransactionProposalRequest:JavaSDK".getBytes(UTF_8)); //Just some extra junk in transient map
@@ -472,16 +415,13 @@ public class Operations {
                     if (response.getStatus() == ProposalResponse.Status.SUCCESS) {
                         out("Successful transaction proposal response Txid: %s from peer %s", response.getTransactionID(), response.getPeer().getName());
                         testTxID = response.getTransactionID();
+                        transactionId.add(testTxID);
                         successful.add(response);
                     } else {
                         failed.add(response);
                     }
                 }
 
-                // Check that all the proposals are consistent with each other. We should have only one set
-                // where all the proposals above are consistent. Note the when sending to Orderer this is done automatically.
-                //  Shown here as an example that applications can invoke and select.
-                // See org.hyperledger.fabric.sdk.proposal.consistency_validation config property.
                 Collection<Set<ProposalResponse>> proposalConsistencySets = SDKUtils.getProposalConsistencySets(transactionPropResp);
                 if (proposalConsistencySets.size() != 1) {
                     out(format("Expected only one set of consistent proposal responses but got %d", proposalConsistencySets.size()));
@@ -503,28 +443,16 @@ public class Operations {
                 if (x != null) {
                     resultAsString = new String(x, "UTF-8");
                 }
-               // assertEquals(":)", resultAsString);
                 
                 out("resp.getChaincodeActionResponseStatus() : %s", resp.getChaincodeActionResponseStatus());
                 
-                //assertEquals(200, resp.getChaincodeActionResponseStatus()); //Chaincode's status.
 
                 TxReadWriteSetInfo readWriteSetInfo = resp.getChaincodeActionResponseReadWriteSetInfo();
-                //See blockwalker below how to transverse this
-                
-                //assertNotNull(readWriteSetInfo);
-                //assertTrue(readWriteSetInfo.getNsRwsetCount() > 0);
 
                 ChaincodeID cid = resp.getChaincodeID();
-//                assertNotNull(cid);
-//                assertEquals(CHAIN_CODE_PATH, cid.getPath());
-//                assertEquals(CHAIN_CODE_NAME, cid.getName());
-//                assertEquals(CHAIN_CODE_VERSION, cid.getVersion());
                 
                 out("CHAIN_CODE_PATH : %s, CHAIN_CODE_NAME : %s, CHAIN_CODE_VERSION : %s ", cid.getPath(), cid.getName(), cid.getVersion());
                 
-                ////////////////////////////
-                // Send Transaction Transaction to orderer
                 out("Sending chaincode transaction(move a,b,100) to orderer.");
                 channel.sendTransaction(successful).get(testConfig.getTransactionWaitTime(), TimeUnit.SECONDS);
 
@@ -534,22 +462,16 @@ public class Operations {
                 out("Failed invoking chaincode with error : %s" + e.getMessage());
             }
 
-
+            return transactionId;
 
     }
     
-    
-    
-    
-    
-    
-    
-    
-    
-
-    private void queryChaincodeForExpectedValue(HFClient client, Channel channel, final String expect, ChaincodeID chaincodeID) {
-
+    private List<String> queryChaincodeForExpectedValue(HFClient client, Channel channel, final String expect, ChaincodeID chaincodeID) {
+    	
         out("Nowquerychaincode on channel %s for the value of b expecting to see: %s", channel.getName(), expect);
+        
+        List<String> queryChaincodeRes = new ArrayList<>();
+
         QueryByChaincodeRequest queryByChaincodeRequest = client.newQueryProposalRequest();
         queryByChaincodeRequest.setArgs(new String[] {"query", "a"});
         queryByChaincodeRequest.setFcn("invoke");
@@ -570,95 +492,15 @@ public class Operations {
             } else {
                 String payload = proposalResponse.getProposalResponse().getResponse().getPayload().toStringUtf8();
                 out("Query payload of a from peer %s returned %s", proposalResponse.getPeer().getName(), payload);
+                queryChaincodeRes.add(payload);
             }
         }
+        
+        return queryChaincodeRes;
+        
     }
     
     
-    //CHECKSTYLE.ON: Method length is 320 lines (max allowed is 150).
-    
-    
-
-    private Channel constructChannel(String name, HFClient client, SampleOrg sampleOrg) throws Exception {
-        ////////////////////////////
-        //Construct the channel
-        //
-
-        out("Constructing channel %s", name);
-
-        //Only peer Admin org
-        client.setUserContext(sampleOrg.getPeerAdmin());
-
-        Collection<Orderer> orderers = new LinkedList<>();
-
-        for (String orderName : sampleOrg.getOrdererNames()) {
-
-            Properties ordererProperties = testConfig.getOrdererProperties(orderName);
-
-            //example of setting keepAlive to avoid timeouts on inactive http2 connections.
-            // Under 5 minutes would require changes to server side to accept faster ping rates.
-            ordererProperties.put("grpc.NettyChannelBuilderOption.keepAliveTime", new Object[] {5L, TimeUnit.MINUTES});
-            ordererProperties.put("grpc.NettyChannelBuilderOption.keepAliveTimeout", new Object[] {8L, TimeUnit.SECONDS});
-            ordererProperties.put("grpc.NettyChannelBuilderOption.keepAliveWithoutCalls", new Object[] {true});
-
-            orderers.add(client.newOrderer(orderName, sampleOrg.getOrdererLocation(orderName),
-                    ordererProperties));
-        }
-
-        //Just pick the first orderer in the list to create the channel.
-
-        Orderer anOrderer = orderers.iterator().next();
-        orderers.remove(anOrderer);
-
-        ChannelConfiguration channelConfiguration = new ChannelConfiguration(new File(TEST_FIXTURES_PATH + "/sdkintegration/e2e/channel/" + name + ".tx"));
-
-        //Create channel that has only one signer that is this orgs peer admin. If channel creation policy needed more signature they would need to be added too.
-        Channel newChannel = client.newChannel(name, anOrderer, channelConfiguration, client.getChannelConfigurationSignature(channelConfiguration, sampleOrg.getPeerAdmin()));
-        
-
-        
-        out("Created channel %s", name);
-
-        for (String peerName : sampleOrg.getPeerNames()) {
-            String peerLocation = sampleOrg.getPeerLocation(peerName);
-
-            Properties peerProperties = testConfig.getPeerProperties(peerName); //test properties for peer.. if any.
-            if (peerProperties == null) {
-                peerProperties = new Properties();
-            }
-            //Example of setting specific options on grpc's NettyChannelBuilder
-            peerProperties.put("grpc.NettyChannelBuilderOption.maxInboundMessageSize", 9000000);
-
-            Peer peer = client.newPeer(peerName, peerLocation, peerProperties);
-            newChannel.joinPeer(peer);
-            out("Peer %s joined channel %s", peerName, name);
-            sampleOrg.addPeer(peer);
-        }
-
-        for (Orderer orderer : orderers) { //add remaining orderers if any.
-            newChannel.addOrderer(orderer);
-        }
-
-        for (String eventHubName : sampleOrg.getEventHubNames()) {
-
-            final Properties eventHubProperties = testConfig.getEventHubProperties(eventHubName);
-
-            eventHubProperties.put("grpc.NettyChannelBuilderOption.keepAliveTime", new Object[] {5L, TimeUnit.MINUTES});
-            eventHubProperties.put("grpc.NettyChannelBuilderOption.keepAliveTimeout", new Object[] {8L, TimeUnit.SECONDS});
-
-            EventHub eventHub = client.newEventHub(eventHubName, sampleOrg.getEventHubLocation(eventHubName),
-                    eventHubProperties);
-            newChannel.addEventHub(eventHub);
-        }
-
-        newChannel.initialize();
-
-        out("Finished initialization channel %s", name);
-
-        return newChannel;
-
-    }
-
     static void out(String format, Object... args) {
 
         System.err.flush();
@@ -683,9 +525,11 @@ public class Operations {
         TX_EXPECTED.put("writeset1", "Missing writeset for channel bar block 1");
     }
 
-    void blockWalker(HFClient client, Channel channel) throws InvalidArgumentException, ProposalException, IOException {
+    List<String> blockWalker(HFClient client, Channel channel) throws InvalidArgumentException, ProposalException, IOException {
+    	List<String> blockWalkerList = new ArrayList<>();
         try {
-            BlockchainInfo channelInfo = channel.queryBlockchainInfo();
+    
+        	BlockchainInfo channelInfo = channel.queryBlockchainInfo();
 
             for (long current = channelInfo.getHeight() - 1; current > -1; --current) {
                 BlockInfo returnedBlock = channel.queryBlockByNumber(current);
@@ -806,6 +650,9 @@ public class Operations {
                                     for (KvRwset.KVWrite writeList : rws.getWritesList()) {
                                         rs++;
                                         String valAsString = printableString(new String(writeList.getValue().toByteArray(), "UTF-8"));
+                                        
+                                        if(!namespace.equals("lscc"))
+                                        	blockWalkerList.add(valAsString);
 
                                         out("     Namespace %s write set %d key %s has value '%s' ", namespace, rs,
                                                 writeList.getKey(),
@@ -832,11 +679,12 @@ public class Operations {
                 }
             }
             if (!TX_EXPECTED.isEmpty()) {
-                out(TX_EXPECTED.get(0));
+                out("%s",TX_EXPECTED.get(0));
             }
         } catch (InvalidProtocolBufferRuntimeException e) {
             throw e.getCause();
         }
+        return blockWalkerList;
     }
 
     static String printableString(final String string) {
@@ -892,16 +740,6 @@ public class Operations {
                 newChannel.addEventHub(eventHub);
             }
         }
-
-        //Just some sanity check tests
-//        assertTrue(newChannel == client.getChannel(name));
-//        assertTrue(client == TestUtils.getField(newChannel, "client"));
-//        assertEquals(name, newChannel.getName());
-//        assertEquals(2, newChannel.getPeers().size());
-//        assertEquals(2, newChannel.getEventHubs().size());
-//        assertEquals(1, newChannel.getOrderers().size());
-//        assertFalse(newChannel.isShutdown());
-//        assertFalse(newChannel.isInitialized());
 
         newChannel.initialize();
 

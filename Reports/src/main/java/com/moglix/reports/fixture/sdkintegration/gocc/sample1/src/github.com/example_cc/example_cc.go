@@ -18,7 +18,7 @@ package main
 
 import (
 	"fmt"
-	"strconv"
+//	"strconv"
 
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	pb "github.com/hyperledger/fabric/protos/peer"
@@ -33,7 +33,7 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface) pb.Response {
 	fmt.Println("########### example_cc Init ###########")
 	_, args := stub.GetFunctionAndParameters()
 	var A, B string    // Entities
-	var Aval, Bval int // Asset holdings
+	var Aval, Bval string // Asset holdings
 	var err error
 
 	if len(args) != 4 {
@@ -42,24 +42,27 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface) pb.Response {
 
 	// Initialize the chaincode
 	A = args[0]
-	Aval, err = strconv.Atoi(args[1])
-	if err != nil {
-		return shim.Error("Expecting integer value for asset holding")
-	}
+	Aval = args[1]
+//	if err != nil {
+//		return shim.Error("Expecting string value for asset holding")
+//	}
+
 	B = args[2]
-	Bval, err = strconv.Atoi(args[3])
-	if err != nil {
-		return shim.Error("Expecting integer value for asset holding")
-	}
+	Bval = args[3]
+//	if err != nil {
+//		return shim.Error("Expecting string value for asset holding")
+//	}
+	
 	fmt.Printf("XXXXXXXXXXXXXXXXXX Chaicode : Aval = %d, Bval = %d\n", Aval, Bval)
 
 	// Write the state to the ledger
-	err = stub.PutState(A, []byte(strconv.Itoa(Aval)))
+	err = stub.PutState(A, []byte(Aval))
+	
 	if err != nil {
 		return shim.Error(err.Error())
 	}
 
-	err = stub.PutState(B, []byte(strconv.Itoa(Bval)))
+	err = stub.PutState(B, []byte(Bval))
 	if err != nil {
 		return shim.Error(err.Error())
 	}
@@ -105,8 +108,8 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 func (t *SimpleChaincode) move(stub shim.ChaincodeStubInterface, args []string) pb.Response {
 	// must be an invoke
 	var A, B string    // Entities
-	var Aval, Bval int // Asset holdings
-	var X int          // Transaction value
+	var Aval, Bval string // Asset holdings
+	var X string          // Transaction value
 	var err error
 
 	if len(args) != 4 {
@@ -119,39 +122,48 @@ func (t *SimpleChaincode) move(stub shim.ChaincodeStubInterface, args []string) 
 	// Get the state from the ledger
 	// TODO: will be nice to have a GetAllState call to ledger
 	Avalbytes, err := stub.GetState(A)
+	
 	if err != nil {
 		return shim.Error("Failed to get state")
 	}
+	
 	if Avalbytes == nil {
 		return shim.Error("Entity not found")
 	}
-	Aval, _ = strconv.Atoi(string(Avalbytes))
+	
+	Aval = string(Avalbytes)
 
 	Bvalbytes, err := stub.GetState(B)
+
 	if err != nil {
 		return shim.Error("Failed to get state")
 	}
+
 	if Bvalbytes == nil {
 		return shim.Error("Entity not found")
 	}
-	Bval, _ = strconv.Atoi(string(Bvalbytes))
+
+	Bval = string(Bvalbytes)
 
 	// Perform the execution
-	X, err = strconv.Atoi(args[3])
-	if err != nil {
-		return shim.Error("Invalid transaction amount, expecting a integer value")
-	}
-	Aval = Aval - X - 22
-	Bval = Bval + X + 22
+	X = args[3]
+	
+//	if err != nil {
+//		return shim.Error("Invalid transaction amount, expecting a integer value")
+//	}
+	
+	Aval = X
+	Bval = X
+	
 	fmt.Printf("Aval = %d, Bval = %d\n", Aval, Bval)
 
 	// Write the state back to the ledger
-	err = stub.PutState(A, []byte(strconv.Itoa(Aval)))
+	err = stub.PutState(A, []byte(Aval))
 	if err != nil {
 		return shim.Error(err.Error())
 	}
 
-	err = stub.PutState(B, []byte(strconv.Itoa(Bval)))
+	err = stub.PutState(B, []byte(Bval))
 	if err != nil {
 		return shim.Error(err.Error())
 	}
@@ -177,6 +189,7 @@ func (t *SimpleChaincode) delete(stub shim.ChaincodeStubInterface, args []string
 
 	// Delete the key from the state in ledger
 	err := stub.DelState(A)
+	
 	if err != nil {
 		return shim.Error("Failed to delete state")
 	}
@@ -188,6 +201,7 @@ func (t *SimpleChaincode) delete(stub shim.ChaincodeStubInterface, args []string
 func (t *SimpleChaincode) query(stub shim.ChaincodeStubInterface, args []string) pb.Response {
 
 	var A string // Entities
+	
 	var err error
 
 	if len(args) != 2 {
