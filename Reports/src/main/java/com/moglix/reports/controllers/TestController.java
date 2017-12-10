@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import com.moglix.reports.fabric.sdkintegration.End2endIT;
 import com.moglix.reports.fabric.sdkintegration.Operations;
 
 
@@ -25,10 +26,10 @@ public class TestController {
     List<Object> create(@RequestHeader(value = "clientId", required = false) String clientId,
                              @RequestBody String jsonData) throws Exception {
 		
-		Operations o = new Operations();
+		End2endIT e = new End2endIT();
 		List<Object> obj = new ArrayList<>();
 		
-		List<String> res = o.tranaction(2, jsonData);
+		List<String> res = e.tranaction(jsonData);
 		
 		for(String str : res) {
 			JsonObject jsonObject = new JsonObject();
@@ -82,6 +83,7 @@ public class TestController {
 	        Gson gson = new Gson();
 	        @SuppressWarnings("deprecation")
 			net.minidev.json.parser.JSONParser jsonParser = new net.minidev.json.parser.JSONParser();
+	        
 	        Object object = jsonParser.parse(str);
 	        obj.add(object);
 		}

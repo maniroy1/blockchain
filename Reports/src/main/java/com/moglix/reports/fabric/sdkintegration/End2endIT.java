@@ -23,11 +23,13 @@ import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
@@ -104,7 +106,8 @@ public class End2endIT {
     
     public static void main(String args[]) {
     	End2endIT e = new End2endIT();
-    	
+    	List<String> resultTransactionList = new ArrayList<>();
+    	String data = "test:Initiate";
     
     	try {
 			e.checkConfig();
@@ -113,10 +116,21 @@ public class End2endIT {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
-    	e.setup();
+    	resultTransactionList = e.setup(data);
     }
     
-    
+    public List<String> tranaction(String data) {
+    	
+    	try {
+			checkConfig();
+		} catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException
+				| MalformedURLException | org.hyperledger.fabric_ca.sdk.exception.InvalidArgumentException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+    	return setup(data);
+    	
+    }
     
     public void checkConfig() throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException, MalformedURLException, org.hyperledger.fabric_ca.sdk.exception.InvalidArgumentException {
         out("\n\n\nRUNNING: End2endIT.\n");
@@ -138,8 +152,8 @@ public class End2endIT {
         }
     }
 
-    public void setup() {
-
+    public List<String> setup(String data) {
+    	List<String> res = new ArrayList<>();
         try {
 
             ////////////////////////////
@@ -244,7 +258,7 @@ public class End2endIT {
             
             Channel fooChannel = constructChannel(FOO_CHANNEL_NAME, client, sampleOrg);
             
-            runChannel(client, fooChannel, true, sampleOrg, 0);
+            res =  runChannel(client, fooChannel, true, sampleOrg, data);
             
             fooChannel.shutdown(true); // Force foo channel to shutdown clean up resources.
             //assertNull(client.getChannel(FOO_CHANNEL_NAME));
@@ -277,11 +291,13 @@ public class End2endIT {
 
             //fail(e.getMessage());
         }
+        
+        return res;
 
     }
 
     //CHECKSTYLE.OFF: Method length is 320 lines (max allowed is 150).
-    void runChannel(HFClient client, Channel channel, boolean installChaincode, SampleOrg sampleOrg, int delta) {
+    List<String> runChannel(HFClient client, Channel channel, boolean installChaincode, SampleOrg sampleOrg, String data) {
 
         class ChaincodeEventCapture { //A test class to capture chaincode events
             final String handle;
@@ -294,6 +310,9 @@ public class End2endIT {
                 this.chaincodeEvent = chaincodeEvent;
             }
         }
+        
+        List<String> transactionList = new ArrayList<>();
+        
         Vector<ChaincodeEventCapture> chaincodeEvents = new Vector<>(); // Test list to capture chaincode events.
 
         try {
@@ -385,8 +404,10 @@ public class End2endIT {
                     if (response.getStatus() == ProposalResponse.Status.SUCCESS) {
                         out("Successful install proposal response Txid: %s from peer %s", response.getTransactionID(), response.getPeer().getName());
                         successful.add(response);
+                        transactionList.add(response.getTransactionID());
                     } else {
                         failed.add(response);
+                        transactionList.add(response.getTransactionID());
                     }
                 }
 
@@ -410,7 +431,7 @@ public class End2endIT {
             instantiateProposalRequest.setProposalWaitTime(testConfig.getProposalWaitTime());
             instantiateProposalRequest.setChaincodeID(chaincodeID);
             instantiateProposalRequest.setFcn("init");
-            instantiateProposalRequest.setArgs(new String[] {"a", "name:manish", "b", "name:manish"});
+            instantiateProposalRequest.setArgs(new String[] {"a", data, "b", data});
             Map<String, byte[]> tm = new HashMap<>();
             tm.put("HyperLedgerFabric", "InstantiateProposalRequest:JavaSDK".getBytes(UTF_8));
             tm.put("method", "InstantiateProposalRequest".getBytes(UTF_8));
@@ -424,7 +445,7 @@ public class End2endIT {
             chaincodeEndorsementPolicy.fromYamlFile(new File(TEST_FIXTURES_PATH + "/sdkintegration/chaincodeendorsementpolicy.yaml"));
             instantiateProposalRequest.setChaincodeEndorsementPolicy(chaincodeEndorsementPolicy);
 
-            out("Sending instantiateProposalRequest to all peers with arguments: a and b set to 100 and %s respectively", "" + (200 + delta));
+            out("Sending instantiateProposalRequest to all peers with arguments: a and b set to 100 and %s respectively", data, data);
             successful.clear();
             failed.clear();
 
@@ -438,8 +459,10 @@ public class End2endIT {
                 if (response.isVerified() && response.getStatus() == ProposalResponse.Status.SUCCESS) {
                     successful.add(response);
                     out("Succesful instantiate proposal response Txid: %s from peer %s", response.getTransactionID(), response.getPeer().getName());
+                    transactionList.add(response.getTransactionID());
                 } else {
                     failed.add(response);
+                    transactionList.add(response.getTransactionID());
                 }
             }
             out("Received %d instantiate proposal responses. Successful+verified: %d . Failed: %d", responses.size(), successful.size(), failed.size());
@@ -450,12 +473,12 @@ public class End2endIT {
 
             ///////////////
             /// Send instantiate transaction to orderer
-            out("Sending instantiateTransaction to orderer with a and b set to 100 and %s respectively", "" + (200 + delta));
+            out("Sending instantiateTransaction to orderer with a and b set to %s and %s respectively", data, data);
 
 
             out("99999999999999999999999999");
             	
-            move(client, channel, installChaincode, sampleOrg, delta, orderers, successful, failed, chaincodeID);
+            //move(client, channel, installChaincode, sampleOrg, delta, orderers, successful, failed, chaincodeID);
         
             //queryChaincodeForExpectedValue(client, channel, "" ,chaincodeID);
             	
@@ -552,6 +575,8 @@ public class End2endIT {
             e.printStackTrace();
             //fail("Test failed with error : " + e.getMessage());
         }
+        
+        return transactionList;
     }
     
     
