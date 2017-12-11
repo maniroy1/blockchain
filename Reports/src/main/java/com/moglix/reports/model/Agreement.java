@@ -109,6 +109,10 @@ public class Agreement {
 		public void setCode(String code) {
 			this.code = code;
 		}
+		@Override
+		public String toString() {
+			return "Company [name=" + name + ", code=" + code + "]";
+		}
 	}
 	
 	public static class Plant {
@@ -127,5 +131,17 @@ public class Agreement {
 		public void setCode(String code) {
 			this.code = code;
 		}
+		@Override
+		public String toString() {
+			return "Plant [name=" + name + ", code=" + code + "]";
+		}
+	}
+
+	@Override
+	public String toString() {
+		return "Agreement [agreementNo=" + agreementNo + ", agreementType=" + agreementType + ", docType=" + docType
+				+ ", purchaseGroup=" + purchaseGroup + ", startDate=" + startDate + ", endDate=" + endDate
+				+ ", currency=" + currency + ", item_count=" + item_count + ", company=" + company + ", plant=" + plant
+				+ "]";
 	}
 }

@@ -12,6 +12,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.moglix.reports.fabric.sdkintegration.End2endIT;
 import com.moglix.reports.fabric.sdkintegration.Operations;
+import com.moglix.reports.model.Agreement;
 
 
 @RestController
@@ -44,12 +45,16 @@ public class TestController {
 	
 	@RequestMapping("/chaincode/trasact")
     List<Object> transact(@RequestHeader(value = "clientId", required = false) String clientId,
-                             @RequestBody String jsonData) throws Exception {
+                             @RequestBody Agreement jsonData) throws Exception {
 		
 		Operations o = new Operations();
 		List<Object> obj = new ArrayList<>();
 		
-		List<String> res = o.tranaction(0, jsonData);
+		System.out.println("transactApiCall : " + jsonData.toString());
+		
+		
+		
+		List<String> res = o.tranaction(0, new Gson().toJson(jsonData));
 		
 		for(String str : res) {
 			JsonObject jsonObject = new JsonObject();
@@ -96,7 +101,7 @@ public class TestController {
 	        Gson gson = new Gson();
 	        @SuppressWarnings("deprecation")
 			net.minidev.json.parser.JSONParser jsonParser = new net.minidev.json.parser.JSONParser();
-	        
+	        System.out.println("historygetcall : " + str );
 	        Object object = jsonParser.parse(str);
 	        obj.add(object);
 		}

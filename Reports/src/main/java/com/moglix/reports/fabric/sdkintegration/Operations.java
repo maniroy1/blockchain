@@ -66,7 +66,7 @@ public class Operations {
 
     private static final String CHAIN_CODE_NAME = "example_cc_go";
     private static final String CHAIN_CODE_PATH = "github.com/example_cc";
-    private static final String CHAIN_CODE_VERSION = "17";
+    private static final String CHAIN_CODE_VERSION = "32";
 
     private static final String FOO_CHANNEL_NAME = "foo";
     private static final String BAR_CHANNEL_NAME = "bar";
@@ -688,7 +688,7 @@ public class Operations {
     }
 
     static String printableString(final String string) {
-        int maxLogStringLength = 64;
+        int maxLogStringLength = 2048;
         if (string == null || string.length() == 0) {
             return string;
         }

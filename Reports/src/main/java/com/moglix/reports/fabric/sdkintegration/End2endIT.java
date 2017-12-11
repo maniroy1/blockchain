@@ -85,7 +85,7 @@ public class End2endIT {
 
     private static final String CHAIN_CODE_NAME = "example_cc_go";
     private static final String CHAIN_CODE_PATH = "github.com/example_cc";
-    private static final String CHAIN_CODE_VERSION = "31";
+    private static final String CHAIN_CODE_VERSION = "32";
 
     private static final String FOO_CHANNEL_NAME = "foo";
     private static final String BAR_CHANNEL_NAME = "bar";
