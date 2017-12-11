@@ -63,10 +63,23 @@ public class TestController {
 	}
 	
 	@RequestMapping("/chaincode/query")
-    String query(@RequestHeader(value = "clientId", required = false) String clientId,
+    List<Object> query(@RequestHeader(value = "clientId", required = false) String clientId,
                              @RequestBody String jsonData) throws Exception {
-		String str = "";
-		return str;
+		Operations o = new Operations();
+		List<Object> obj = new ArrayList<>();
+		
+		List<String> res = o.tranaction(1, "");
+		
+		for(String str : res) {
+			JsonObject jsonObject = new JsonObject();
+	        Gson gson = new Gson();
+	        @SuppressWarnings("deprecation")
+			net.minidev.json.parser.JSONParser jsonParser = new net.minidev.json.parser.JSONParser();
+	        
+	        Object object = jsonParser.parse(str);
+	        obj.add(object);
+		}
+		return obj;
 	}
 	
 	@RequestMapping("/chaincode/history")

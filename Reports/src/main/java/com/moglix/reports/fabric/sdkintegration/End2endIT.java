@@ -85,7 +85,7 @@ public class End2endIT {
 
     private static final String CHAIN_CODE_NAME = "example_cc_go";
     private static final String CHAIN_CODE_PATH = "github.com/example_cc";
-    private static final String CHAIN_CODE_VERSION = "6";
+    private static final String CHAIN_CODE_VERSION = "31";
 
     private static final String FOO_CHANNEL_NAME = "foo";
     private static final String BAR_CHANNEL_NAME = "bar";
@@ -107,7 +107,7 @@ public class End2endIT {
     public static void main(String args[]) {
     	End2endIT e = new End2endIT();
     	List<String> resultTransactionList = new ArrayList<>();
-    	String data = "test:Initiate";
+    	String data = "{\"agreementNo\": \"6500002197\", \"agreementType\": \"SA\", \"docType\": \"Scheduling Agreement\" }";
     
     	try {
 			e.checkConfig();
@@ -477,10 +477,12 @@ public class End2endIT {
 
 
             out("99999999999999999999999999");
-            	
-            //move(client, channel, installChaincode, sampleOrg, delta, orderers, successful, failed, chaincodeID);
-        
+            
             //queryChaincodeForExpectedValue(client, channel, "" ,chaincodeID);
+            
+            move(client, channel, installChaincode, sampleOrg, 0, orderers, successful, failed, chaincodeID, data);
+        
+            queryChaincodeForExpectedValue(client, channel, "" ,chaincodeID);
             	
             	
             out("77777777777777777777777777");
@@ -493,39 +495,39 @@ public class End2endIT {
             //  Peer queryPeer = peerSet.iterator().next();
             //   out("Using peer %s for channel queries", queryPeer.getName());
 
-            BlockchainInfo channelInfo = channel.queryBlockchainInfo();
-            out("Channel info for : " + channelName);
-            out("Channel height: " + channelInfo.getHeight());
-            String chainCurrentHash = Hex.encodeHexString(channelInfo.getCurrentBlockHash());
-            String chainPreviousHash = Hex.encodeHexString(channelInfo.getPreviousBlockHash());
-            out("Chain current block hash: " + chainCurrentHash);
-            out("Chainl previous block hash: " + chainPreviousHash);
-
-            // Query by block number. Should return latest block, i.e. block number 2
-            BlockInfo returnedBlock = channel.queryBlockByNumber(channelInfo.getHeight() - 1);
-            String previousHash = Hex.encodeHexString(returnedBlock.getPreviousHash());
-            out("queryBlockByNumber returned correct block with blockNumber " + returnedBlock.getBlockNumber()
-                    + " \n previous_hash " + previousHash);
-          
-            
-            out("channelInfo height : %s , returnedBlock : %s, ",channelInfo.getHeight() - 1, returnedBlock.getBlockNumber());
-            out("chainPreviousHash : %s , previousHash %s : ", chainPreviousHash, previousHash);
-
-            // Query by block hash. Using latest block's previous hash so should return block number 1
-            byte[] hashQuery = returnedBlock.getPreviousHash();
-            returnedBlock = channel.queryBlockByHash(hashQuery);
-            out("queryBlockByHash returned block with blockNumber " + returnedBlock.getBlockNumber());
-            out("channelInfo's Height : %s, returnedBlock block number : %s", channelInfo.getHeight() - 2, returnedBlock.getBlockNumber());
-
-            // Query block by TxID. Since it's the last TxID, should be block 2
-            returnedBlock = channel.queryBlockByTransactionID(testTxID);
-            out("queryBlockByTxID returned block with blockNumber " + returnedBlock.getBlockNumber());
-            out("channelInfo's Height : %s, returnedBlock block number : %s", channelInfo.getHeight() - 1, returnedBlock.getBlockNumber());
-
-            // query transaction by ID
-            TransactionInfo txInfo = channel.queryTransactionByID(testTxID);
-            out("QueryTransactionByID returned TransactionInfo: txID " + txInfo.getTransactionID()
-                    + "\n     validation code " + txInfo.getValidationCode().getNumber());
+//            BlockchainInfo channelInfo = channel.queryBlockchainInfo();
+//            out("Channel info for : " + channelName);
+//            out("Channel height: " + channelInfo.getHeight());
+//            String chainCurrentHash = Hex.encodeHexString(channelInfo.getCurrentBlockHash());
+//            String chainPreviousHash = Hex.encodeHexString(channelInfo.getPreviousBlockHash());
+//            out("Chain current block hash: " + chainCurrentHash);
+//            out("Chainl previous block hash: " + chainPreviousHash);
+//
+//            // Query by block number. Should return latest block, i.e. block number 2
+//            BlockInfo returnedBlock = channel.queryBlockByNumber(channelInfo.getHeight() - 1);
+//            String previousHash = Hex.encodeHexString(returnedBlock.getPreviousHash());
+//            out("queryBlockByNumber returned correct block with blockNumber " + returnedBlock.getBlockNumber()
+//                    + " \n previous_hash " + previousHash);
+//          
+//            
+//            out("channelInfo height : %s , returnedBlock : %s, ",channelInfo.getHeight() - 1, returnedBlock.getBlockNumber());
+//            out("chainPreviousHash : %s , previousHash %s : ", chainPreviousHash, previousHash);
+//
+//            // Query by block hash. Using latest block's previous hash so should return block number 1
+//            byte[] hashQuery = returnedBlock.getPreviousHash();
+//            returnedBlock = channel.queryBlockByHash(hashQuery);
+//            out("queryBlockByHash returned block with blockNumber " + returnedBlock.getBlockNumber());
+//            out("channelInfo's Height : %s, returnedBlock block number : %s", channelInfo.getHeight() - 2, returnedBlock.getBlockNumber());
+//
+//            // Query block by TxID. Since it's the last TxID, should be block 2
+//            returnedBlock = channel.queryBlockByTransactionID(testTxID);
+//            out("queryBlockByTxID returned block with blockNumber " + returnedBlock.getBlockNumber());
+//            out("channelInfo's Height : %s, returnedBlock block number : %s", channelInfo.getHeight() - 1, returnedBlock.getBlockNumber());
+//
+//            // query transaction by ID
+//            TransactionInfo txInfo = channel.queryTransactionByID(testTxID);
+//            out("QueryTransactionByID returned TransactionInfo: txID " + txInfo.getTransactionID()
+//                    + "\n     validation code " + txInfo.getValidationCode().getNumber());
 
             if (chaincodeEventListenerHandle != null) {
 
@@ -585,7 +587,7 @@ public class End2endIT {
     
     private void move(HFClient client, Channel channel, boolean installChaincode, SampleOrg sampleOrg, int delta ,
     		Collection<Orderer> orderers, Collection<ProposalResponse> successful, Collection<ProposalResponse> failed, 
-    		final ChaincodeID chaincodeID) throws Exception {
+    		final ChaincodeID chaincodeID, String data) throws Exception {
     	
     	
 
@@ -610,7 +612,7 @@ public class End2endIT {
                 transactionProposalRequest.setChaincodeID(chaincodeID);
                 transactionProposalRequest.setFcn("invoke");
                 transactionProposalRequest.setProposalWaitTime(testConfig.getProposalWaitTime());
-                transactionProposalRequest.setArgs(new String[] {"move", "a", "b", "name:abhishek"});
+                transactionProposalRequest.setArgs(new String[] {"move", "a", "b", data});
 
                 Map<String, byte[]> tm2 = new HashMap<>();
                 tm2.put("HyperLedgerFabric", "TransactionProposalRequest:JavaSDK".getBytes(UTF_8)); //Just some extra junk in transient map

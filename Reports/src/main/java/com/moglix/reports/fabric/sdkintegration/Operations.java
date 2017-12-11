@@ -66,7 +66,7 @@ public class Operations {
 
     private static final String CHAIN_CODE_NAME = "example_cc_go";
     private static final String CHAIN_CODE_PATH = "github.com/example_cc";
-    private static final String CHAIN_CODE_VERSION = "6";
+    private static final String CHAIN_CODE_VERSION = "17";
 
     private static final String FOO_CHANNEL_NAME = "foo";
     private static final String BAR_CHANNEL_NAME = "bar";
@@ -91,7 +91,7 @@ public class Operations {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
-    	e.setup(2, "testing");
+    	e.setup(1, "testing");
     }
     
     public List<String> tranaction(int delta, String data) {
@@ -650,7 +650,7 @@ public class Operations {
                                     for (KvRwset.KVWrite writeList : rws.getWritesList()) {
                                         rs++;
                                         String valAsString = printableString(new String(writeList.getValue().toByteArray(), "UTF-8"));
-                                        
+                                        out("--------------------> %s ", valAsString);
                                         if(!namespace.equals("lscc"))
                                         	blockWalkerList.add(valAsString);
 
