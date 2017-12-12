@@ -140,10 +140,13 @@ public class End2endIT {
         configHelper.customizeConfig();
 
         testSampleOrgs = testConfig.getIntegrationTestsSampleOrgs();
+        
+        System.out.println("TestSampleOrgs size : " + testSampleOrgs.size());
         //Set up hfca for each sample org
 
         for (SampleOrg sampleOrg : testSampleOrgs) {
             String caName = sampleOrg.getCAName(); //Try one of each name and no name.
+            System.out.println("caName : " + caName + "ca location : " + sampleOrg.getCALocation());
             if (caName != null && !caName.isEmpty()) {
                 sampleOrg.setCAClient(HFCAClient.createNewInstance(caName, sampleOrg.getCALocation(), sampleOrg.getCAProperties()));
             } else {
@@ -191,6 +194,9 @@ public class End2endIT {
 
                 final String orgName = sampleOrg.getName();
                 final String mspid = sampleOrg.getMSPID();
+                
+                System.out.println("orgname and mspId :  " + orgName + " - " + mspid);
+                
                 ca.setCryptoSuite(CryptoSuite.Factory.getCryptoSuite());
 
                 HFCAInfo info = ca.info(); //just check if we connect at all.
@@ -593,6 +599,8 @@ public class End2endIT {
 
     	out("XYXYXYXYXYXYXYXYXYXYXY");
     	
+    	String data1 = "{\"agreementNo\": \"6500002197\", \"agreementType\": \"PO\", \"docType\": \"Purchase Order\" }";
+    	
     	channel.sendTransaction(successful, orderers).thenApply(transactionEvent -> {
 
             waitOnFabric(0);
@@ -612,7 +620,7 @@ public class End2endIT {
                 transactionProposalRequest.setChaincodeID(chaincodeID);
                 transactionProposalRequest.setFcn("invoke");
                 transactionProposalRequest.setProposalWaitTime(testConfig.getProposalWaitTime());
-                transactionProposalRequest.setArgs(new String[] {"move", "a", "b", data});
+                transactionProposalRequest.setArgs(new String[] {"move", "a", "b", data1});
 
                 Map<String, byte[]> tm2 = new HashMap<>();
                 tm2.put("HyperLedgerFabric", "TransactionProposalRequest:JavaSDK".getBytes(UTF_8)); //Just some extra junk in transient map
@@ -812,6 +820,8 @@ public class End2endIT {
         Collection<Orderer> orderers = new LinkedList<>();
 
         for (String orderName : sampleOrg.getOrdererNames()) {
+        	
+        	out("orderName : %s", orderName);
 
             Properties ordererProperties = testConfig.getOrdererProperties(orderName);
 

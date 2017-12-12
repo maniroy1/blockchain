@@ -25,12 +25,12 @@ public class TestController {
     
 	@RequestMapping("/chaincode/create")
     List<Object> create(@RequestHeader(value = "clientId", required = false) String clientId,
-                             @RequestBody String jsonData) throws Exception {
+                             @RequestBody Agreement jsonData) throws Exception {
 		
 		End2endIT e = new End2endIT();
 		List<Object> obj = new ArrayList<>();
 		
-		List<String> res = e.tranaction(jsonData);
+		List<String> res = e.tranaction(new Gson().toJson(jsonData));
 		
 		for(String str : res) {
 			JsonObject jsonObject = new JsonObject();
@@ -68,8 +68,7 @@ public class TestController {
 	}
 	
 	@RequestMapping("/chaincode/query")
-    List<Object> query(@RequestHeader(value = "clientId", required = false) String clientId,
-                             @RequestBody String jsonData) throws Exception {
+    List<Object> query(@RequestHeader(value = "clientId", required = false) String clientId) throws Exception {
 		Operations o = new Operations();
 		List<Object> obj = new ArrayList<>();
 		
@@ -88,14 +87,12 @@ public class TestController {
 	}
 	
 	@RequestMapping("/chaincode/history")
-    List<Object> history(@RequestHeader(value = "clientId", required = false) String clientId,
-                             @RequestBody String jsonData) throws Exception {
+    List<Object> history(@RequestHeader(value = "clientId", required = false) String clientId) throws Exception {
 		
 		Operations o = new Operations();
 		List<Object> obj = new ArrayList<>();
 		
 		List<String> res = o.tranaction(2, "");
-		
 		for(String str : res) {
 			JsonObject jsonObject = new JsonObject();
 	        Gson gson = new Gson();
