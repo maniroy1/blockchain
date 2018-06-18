@@ -166,6 +166,7 @@ public class End2endIT {
             HFClient client = HFClient.createNewInstance();
 
             client.setCryptoSuite(CryptoSuite.Factory.getCryptoSuite());
+            
 
             // client.setMemberServices(peerOrg1FabricCA);
 

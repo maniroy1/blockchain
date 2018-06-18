@@ -53,7 +53,6 @@ public class TestController {
 		System.out.println("transactApiCall : " + jsonData.toString());
 		
 		
-		
 		List<String> res = o.tranaction(0, new Gson().toJson(jsonData));
 		
 		for(String str : res) {
